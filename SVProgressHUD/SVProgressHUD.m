@@ -27,10 +27,10 @@ static UIColor *SVProgressHUDBackgroundColor;
 static UIColor *SVProgressHUDForegroundColor;
 static CGFloat SVProgressHUDRingThickness;
 static UIFont *SVProgressHUDFont;
-static UIImage *SVProgressHUDInfoImage;
 static UIImage *SVProgressHUDSuccessImage;
 static UIImage *SVProgressHUDErrorImage;
 static SVProgressHUDMaskType SVProgressHUDDefaultMaskType;
+static CGFloat SVProgressHUDPosY;
 
 static const CGFloat SVProgressHUDRingRadius = 18;
 static const CGFloat SVProgressHUDRingNoTextRadius = 24;
@@ -86,7 +86,7 @@ static const CGFloat SVProgressHUDUndefinedProgress = -1;
 #pragma mark - Setters
 
 + (void)setStatus:(NSString *)string {
-	[[self sharedView] setStatus:string];
+    [[self sharedView] setStatus:string];
 }
 
 + (void)setBackgroundColor:(UIColor *)color {
@@ -109,11 +109,6 @@ static const CGFloat SVProgressHUDUndefinedProgress = -1;
     SVProgressHUDRingThickness = width;
 }
 
-+ (void)setInfoImage:(UIImage*)image{
-    [self sharedView];
-    SVProgressHUDInfoImage = image;
-}
-
 + (void)setSuccessImage:(UIImage *)image {
     [self sharedView];
     SVProgressHUDSuccessImage = image;
@@ -134,6 +129,11 @@ static const CGFloat SVProgressHUDUndefinedProgress = -1;
 
 + (void)show {
     [self showWithStatus:nil];
+}
+
++ (void)showAtPosY:(CGFloat)PosY {
+    SVProgressHUDPosY = PosY;
+    [[self sharedView] showProgress:-1 status:nil maskType:SVProgressHUDMaskTypeNone];
 }
 
 + (void)showWithMaskType:(SVProgressHUDMaskType)maskType {
@@ -168,16 +168,6 @@ static const CGFloat SVProgressHUDUndefinedProgress = -1;
 
 
 #pragma mark - Show then dismiss methods
-
-+ (void)showInfoWithStatus:(NSString *)string {
-    [self sharedView];
-    [self showInfoWithStatus:string maskType:SVProgressHUDDefaultMaskType];
-}
-
-+ (void)showInfoWithStatus:(NSString *)string maskType:(SVProgressHUDMaskType)maskType {
-    [self sharedView];
-    [self showImage:SVProgressHUDInfoImage status:string maskType:maskType];
-}
 
 + (void)showSuccessWithStatus:(NSString *)string {
     [self sharedView];
@@ -241,9 +231,9 @@ static const CGFloat SVProgressHUDUndefinedProgress = -1;
 
 - (id)initWithFrame:(CGRect)frame {
     if ((self = [super initWithFrame:frame])) {
-		self.userInteractionEnabled = NO;
+        self.userInteractionEnabled = NO;
         self.backgroundColor = [UIColor clearColor];
-		self.alpha = 0.0f;
+        self.alpha = 0.0f;
         self.activityCount = 0;
         
         SVProgressHUDBackgroundColor = [UIColor whiteColor];
@@ -256,18 +246,16 @@ static const CGFloat SVProgressHUDUndefinedProgress = -1;
             SVProgressHUDForegroundColor = [UIColor whiteColor];
         }
         if ([[UIImage class] instancesRespondToSelector:@selector(imageWithRenderingMode:)]) {
-            SVProgressHUDInfoImage = [[UIImage imageNamed:@"SVProgressHUD.bundle/info"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
             SVProgressHUDSuccessImage = [[UIImage imageNamed:@"SVProgressHUD.bundle/success"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
             SVProgressHUDErrorImage = [[UIImage imageNamed:@"SVProgressHUD.bundle/error"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
         } else {
-            SVProgressHUDInfoImage = [UIImage imageNamed:@"SVProgressHUD.bundle/info"];
             SVProgressHUDSuccessImage = [UIImage imageNamed:@"SVProgressHUD.bundle/success"];
             SVProgressHUDErrorImage = [UIImage imageNamed:@"SVProgressHUD.bundle/error"];
         }
         SVProgressHUDRingThickness = 2;
         SVProgressHUDDefaultMaskType = SVProgressHUDMaskTypeNone;
     }
-	
+    
     return self;
 }
 
@@ -306,7 +294,7 @@ static const CGFloat SVProgressHUDUndefinedProgress = -1;
 }
 
 - (void)updatePosition {
-	
+    
     CGFloat hudWidth = 100.0f;
     CGFloat hudHeight = 100.0f;
     CGFloat stringHeightBuffer = 20.0f;
@@ -364,21 +352,21 @@ static const CGFloat SVProgressHUDUndefinedProgress = -1;
             labelRect = CGRectMake(0.0f, labelRectY, hudWidth, stringHeight);
         }
     }
-	
-	self.hudView.bounds = CGRectMake(0.0f, 0.0f, hudWidth, hudHeight);
+    
+    self.hudView.bounds = CGRectMake(0.0f, 0.0f, hudWidth, hudHeight);
     
     if(string)
         self.imageView.center = CGPointMake(CGRectGetWidth(self.hudView.bounds)/2, 36.0f);
-	else
-       	self.imageView.center = CGPointMake(CGRectGetWidth(self.hudView.bounds)/2, CGRectGetHeight(self.hudView.bounds)/2);
-	
-	self.stringLabel.hidden = NO;
-	self.stringLabel.frame = labelRect;
+    else
+        self.imageView.center = CGPointMake(CGRectGetWidth(self.hudView.bounds)/2, CGRectGetHeight(self.hudView.bounds)/2);
+    
+    self.stringLabel.hidden = NO;
+    self.stringLabel.frame = labelRect;
     
     [CATransaction begin];
     [CATransaction setValue:(id)kCFBooleanTrue forKey:kCATransactionDisableActions];
-	
-	if(string) {
+    
+    if(string) {
         self.indefiniteAnimatedView.radius = SVProgressHUDRingRadius;
         [self.indefiniteAnimatedView sizeToFit];
         
@@ -387,7 +375,7 @@ static const CGFloat SVProgressHUDUndefinedProgress = -1;
         
         if(self.progress != SVProgressHUDUndefinedProgress)
             self.backgroundRingLayer.position = self.ringLayer.position = CGPointMake((CGRectGetWidth(self.hudView.bounds)/2), 36.0f);
-	} else {
+    } else {
         self.indefiniteAnimatedView.radius = SVProgressHUDRingNoTextRadius;
         [self.indefiniteAnimatedView sizeToFit];
         
@@ -402,7 +390,7 @@ static const CGFloat SVProgressHUDUndefinedProgress = -1;
 }
 
 - (void)setStatus:(NSString *)string {
-	self.stringLabel.text = string;
+    self.stringLabel.text = string;
     [self updatePosition];
     
 }
@@ -499,7 +487,11 @@ static const CGFloat SVProgressHUDUndefinedProgress = -1;
         activeHeight += CGRectGetHeight(statusBarFrame)*2;
     
     activeHeight -= keyboardHeight;
-    CGFloat posY = floor(activeHeight*0.45);
+    CGFloat posY;
+    if (!SVProgressHUDPosY) {
+        posY = floor(activeHeight*0.45);
+    }
+    else posY = SVProgressHUDPosY;
     CGFloat posX = CGRectGetWidth(orientationFrame)/2;
     
     CGPoint newCenter;
@@ -891,10 +883,10 @@ static const CGFloat SVProgressHUDUndefinedProgress = -1;
 - (UILabel *)stringLabel {
     if (!_stringLabel) {
         _stringLabel = [[UILabel alloc] initWithFrame:CGRectZero];
-		_stringLabel.backgroundColor = [UIColor clearColor];
-		_stringLabel.adjustsFontSizeToFitWidth = YES;
+        _stringLabel.backgroundColor = [UIColor clearColor];
+        _stringLabel.adjustsFontSizeToFitWidth = YES;
         _stringLabel.textAlignment = NSTextAlignmentCenter;
-		_stringLabel.baselineAdjustment = UIBaselineAdjustmentAlignCenters;
+        _stringLabel.baselineAdjustment = UIBaselineAdjustmentAlignCenters;
         _stringLabel.numberOfLines = 0;
     }
     
