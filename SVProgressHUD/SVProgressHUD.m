@@ -82,6 +82,12 @@ static const CGFloat SVProgressHUDUndefinedProgress = -1;
     return sharedView;
 }
 
++ (SVProgressHUD*)subView:(UIView *)subview {
+    static dispatch_once_t once;
+    static SVProgressHUD *sharedView;
+    dispatch_once(&once, ^ { sharedView = [[self alloc] initWithFrame:[subview bounds]]; [subview addSubview:sharedView]; });
+    return sharedView;
+}
 
 #pragma mark - Setters
 
@@ -129,6 +135,11 @@ static const CGFloat SVProgressHUDUndefinedProgress = -1;
 
 + (void)show {
     [self showWithStatus:nil];
+}
+
++ (void)showWithSubview:(UIView *)subview {
+    SVProgressHUDPosY = subview.frame.origin.y + (subview.frame.size.height/2);
+    [[self subView:subview] showProgress:-1 status:nil maskType:SVProgressHUDMaskTypeNone];
 }
 
 + (void)showAtPosY:(CGFloat)PosY {
@@ -314,10 +325,10 @@ static const CGFloat SVProgressHUDUndefinedProgress = -1;
         CGSize constraintSize = CGSizeMake(200.0f, 300.0f);
         CGRect stringRect;
         if ([string respondsToSelector:@selector(boundingRectWithSize:options:attributes:context:)]) {
-          stringRect = [string boundingRectWithSize:constraintSize
-                                            options:(NSStringDrawingUsesFontLeading|NSStringDrawingTruncatesLastVisibleLine|NSStringDrawingUsesLineFragmentOrigin)
-                                         attributes:@{NSFontAttributeName: self.stringLabel.font}
-                                            context:NULL];
+            stringRect = [string boundingRectWithSize:constraintSize
+                                              options:(NSStringDrawingUsesFontLeading|NSStringDrawingTruncatesLastVisibleLine|NSStringDrawingUsesLineFragmentOrigin)
+                                           attributes:@{NSFontAttributeName: self.stringLabel.font}
+                                              context:NULL];
         } else {
             CGSize stringSize;
             
@@ -452,7 +463,7 @@ static const CGFloat SVProgressHUDUndefinedProgress = -1;
         ignoreOrientation = YES;
     }
 #endif
-
+    
     if(notification) {
         NSDictionary* keyboardInfo = [notification userInfo];
         CGRect keyboardFrame = [[keyboardInfo valueForKey:UIKeyboardFrameBeginUserInfoKey] CGRectValue];
@@ -657,7 +668,7 @@ static const CGFloat SVProgressHUDUndefinedProgress = -1;
     CGContextFillRect(c, rect);
     UIImage *tintedImage = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
-
+    
     return tintedImage;
 }
 
@@ -667,7 +678,7 @@ static const CGFloat SVProgressHUDUndefinedProgress = -1;
     
     if(![self.class isVisible])
         [self.class show];
-  
+    
     if ([self.imageView respondsToSelector:@selector(setTintColor:)]) {
         self.imageView.tintColor = SVProgressHUDForegroundColor;
     } else {
@@ -676,7 +687,7 @@ static const CGFloat SVProgressHUDUndefinedProgress = -1;
     self.imageView.image = image;
     self.imageView.hidden = NO;
     self.maskType = hudMaskType;
-  
+    
     self.stringLabel.text = string;
     [self updatePosition];
     [self.indefiniteAnimatedView removeFromSuperview];
@@ -855,19 +866,19 @@ static const CGFloat SVProgressHUDUndefinedProgress = -1;
         _hudView.backgroundColor = SVProgressHUDBackgroundColor;
         _hudView.layer.cornerRadius = 14;
         _hudView.layer.masksToBounds = YES;
-
+        
         _hudView.autoresizingMask = (UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleTopMargin |
                                      UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleLeftMargin);
-
+        
         if ([_hudView respondsToSelector:@selector(addMotionEffect:)]) {
             UIInterpolatingMotionEffect *effectX = [[UIInterpolatingMotionEffect alloc] initWithKeyPath: @"center.x" type: UIInterpolatingMotionEffectTypeTiltAlongHorizontalAxis];
             effectX.minimumRelativeValue = @(-SVProgressHUDParallaxDepthPoints);
             effectX.maximumRelativeValue = @(SVProgressHUDParallaxDepthPoints);
-
+            
             UIInterpolatingMotionEffect *effectY = [[UIInterpolatingMotionEffect alloc] initWithKeyPath: @"center.y" type: UIInterpolatingMotionEffectTypeTiltAlongVerticalAxis];
             effectY.minimumRelativeValue = @(-SVProgressHUDParallaxDepthPoints);
             effectY.maximumRelativeValue = @(SVProgressHUDParallaxDepthPoints);
-
+            
             UIMotionEffectGroup *effectGroup = [[UIMotionEffectGroup alloc] init];
             effectGroup.motionEffects = @[effectX, effectY];
             [_hudView addMotionEffect:effectGroup];
@@ -892,7 +903,7 @@ static const CGFloat SVProgressHUDUndefinedProgress = -1;
     
     if(!_stringLabel.superview)
         [self.hudView addSubview:_stringLabel];
-
+    
     _stringLabel.textColor = SVProgressHUDForegroundColor;
     _stringLabel.font = SVProgressHUDFont;
     
