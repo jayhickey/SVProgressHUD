@@ -75,7 +75,10 @@ static const CGFloat SVProgressHUDUndefinedProgress = -1;
 
 @implementation SVProgressHUD
 
+BOOL showAsSubview;
+
 + (SVProgressHUD*)sharedView {
+    showAsSubview = NO;
     static dispatch_once_t once;
     static SVProgressHUD *sharedView;
     dispatch_once(&once, ^ { sharedView = [[self alloc] initWithFrame:[[UIScreen mainScreen] bounds]]; });
@@ -83,9 +86,13 @@ static const CGFloat SVProgressHUDUndefinedProgress = -1;
 }
 
 + (SVProgressHUD*)subView:(UIView *)subview {
+    showAsSubview = YES;
     static dispatch_once_t once;
     static SVProgressHUD *sharedView;
-    dispatch_once(&once, ^ { sharedView = [[self alloc] initWithFrame:[subview bounds]]; [subview addSubview:sharedView]; });
+    dispatch_once(&once, ^ {
+        sharedView = [[self alloc] initWithFrame:[subview bounds]];
+        [subview addSubview:sharedView];
+    });
     return sharedView;
 }
 
@@ -583,6 +590,9 @@ static const CGFloat SVProgressHUDUndefinedProgress = -1;
     
     if(!self.superview)
         [self.overlayView addSubview:self];
+    
+    if (showAsSubview)
+        [self.overlayView removeFromSuperview];
     
     self.fadeOutTimer = nil;
     self.imageView.hidden = YES;
