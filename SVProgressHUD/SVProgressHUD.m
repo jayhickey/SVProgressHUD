@@ -764,6 +764,8 @@ BOOL showAsSubview;
                              // uncomment to make sure UIWindow is gone from app.windows
                              //NSLog(@"%@", [UIApplication sharedApplication].windows);
                              //NSLog(@"keyWindow = %@", [UIApplication sharedApplication].keyWindow);
+                             [SVProgressHUD setForegroundColor: [UIColor blackColor]];
+                             [SVProgressHUD setBackgroundColor: [UIColor whiteColor]];
                          }
                      }];
 }
